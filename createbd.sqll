@@ -1,0 +1,51 @@
+-- Tabela de escolas
+CREATE TABLE escolas (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL
+);
+
+-- Tabela de turmas
+CREATE TABLE turmas (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(50) NOT NULL
+);
+
+-- Tabela de alunos (matriculados)
+CREATE TABLE alunos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL,
+    cpf VARCHAR(14) UNIQUE NOT NULL,
+    idade INT NOT NULL,
+    escola_id INT,
+    turma_id INT,
+    data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (escola_id) REFERENCES escolas(id),
+    FOREIGN KEY (turma_id) REFERENCES turmas(id)
+);
+
+-- Tabela de lista de espera
+CREATE TABLE lista_espera (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL,
+    cpf VARCHAR(14) UNIQUE NOT NULL,
+    escola_id INT,
+    turma_id INT,
+    data_inscricao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (escola_id) REFERENCES escolas(id),
+    FOREIGN KEY (turma_id) REFERENCES turmas(id)
+);
+
+-- Inserindo escolas
+INSERT INTO escolas (nome) VALUES
+('ESCOLA TRES MARTIRES'),
+('ESCOLA PANAMBI'),
+('ESCOLA SANTO AUGUSTO');
+
+-- Inserindo turmas
+INSERT INTO turmas (nome) VALUES
+('BERÇÁRIO I'),
+('BERÇÁRIO II'),
+('MATERNAL I'),
+('MATERNAL II'),
+('PRÉ A'),
+('PRÉ B');
