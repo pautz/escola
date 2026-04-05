@@ -2,18 +2,22 @@
 $conn = new mysqli("localhost", "u839226731_cztuap", "Meu6595869Trator", "u839226731_meutrator");
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $nome = $_POST['nome'];
-    $cpf = $_POST['cpf'];
+    $nome      = $_POST['nome'];
+    $cpf       = $_POST['cpf'];
     $escola_id = $_POST['escola'];
-    $turma_id = $_POST['turma'];
+    $turma_id  = $_POST['turma'];
 
-    $sql = "INSERT INTO lista_espera (nome, cpf, escola_id, turma_id) 
-            VALUES ('$nome', '$cpf', '$escola_id', '$turma_id')";
-    if ($conn->query($sql)) {
+    // Usando prepared statement para segurança
+    $stmt = $conn->prepare("INSERT INTO lista_espera (nome, cpf, escola_id, turma_id, data_cadastro) 
+                            VALUES (?, ?, ?, ?, NOW())");
+    $stmt->bind_param("ssii", $nome, $cpf, $escola_id, $turma_id);
+
+    if ($stmt->execute()) {
         echo "<p class='success'>Aluno cadastrado na lista de espera com sucesso!</p>";
     } else {
-        echo "<p class='error'>Erro ao cadastrar: " . $conn->error . "</p>";
+        echo "<p class='error'>Erro ao cadastrar: " . $stmt->error . "</p>";
     }
+    $stmt->close();
 }
 ?>
 <!DOCTYPE html>
@@ -22,6 +26,92 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <meta charset="UTF-8">
     <title>Cadastro Lista de Espera</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 30px auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #007BFF;
+        }
+
+        .form-cadastro {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .form-cadastro label {
+            font-weight: bold;
+        }
+
+        .form-cadastro input,
+        .form-cadastro select,
+        .form-cadastro button {
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 15px;
+        }
+
+        .form-cadastro button {
+            background: #007BFF;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .form-cadastro button:hover {
+            background: #0056b3;
+        }
+
+        .success {
+            color: green;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .error {
+            color: red;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        /* Responsividade */
+        @media (max-width: 600px) {
+            .container {
+                padding: 15px;
+            }
+
+            .form-cadastro input,
+            .form-cadastro select,
+            .form-cadastro button {
+                font-size: 14px;
+                padding: 10px;
+            }
+
+            h2 {
+                font-size: 20px;
+            }
+        }
+    </style>
 </head>
 <body>
     <style>body {
@@ -43,67 +133,96 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 h2 {
     text-align: center;
     margin-bottom: 20px;
-    color: #333;
+    color: #007BFF;
 }
 
-.filter-form, .form-cadastro {
+/* Formulário */
+.form-cadastro {
     display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-bottom: 20px;
+    flex-direction: column;
+    gap: 15px;
 }
 
 .form-cadastro label {
-    flex: 1 1 100%;
-    margin-top: 10px;
     font-weight: bold;
+    margin-bottom: 5px;
 }
 
-.filter-form input, 
-.filter-form select, 
-.filter-form button,
 .form-cadastro input,
 .form-cadastro select,
 .form-cadastro button {
-    flex: 1;
-    min-width: 150px;
-    padding: 10px;
+    padding: 12px;
     border: 1px solid #ccc;
     border-radius: 6px;
+    font-size: 15px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
-button {
+.form-cadastro button {
     background: #007BFF;
     color: #fff;
     border: none;
     cursor: pointer;
+    transition: background 0.3s;
 }
 
-button:hover {
+.form-cadastro button:hover {
     background: #0056b3;
 }
 
+/* Mensagens */
 .success {
     color: green;
     font-weight: bold;
     text-align: center;
+    margin-bottom: 15px;
 }
 
 .error {
     color: red;
     font-weight: bold;
     text-align: center;
+    margin-bottom: 15px;
 }
 
 /* Responsividade */
-@media (max-width: 600px) {
-    .filter-form, .form-cadastro {
-        flex-direction: column;
+@media (max-width: 768px) {
+    .container {
+        padding: 15px;
     }
 
-    table th, table td {
+    h2 {
+        font-size: 22px;
+    }
+
+    .form-cadastro input,
+    .form-cadastro select,
+    .form-cadastro button {
         font-size: 14px;
+        padding: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    h2 {
+        font-size: 20px;
+    }
+
+    .container {
+        margin: 15px;
+        padding: 12px;
+    }
+
+    .form-cadastro input,
+    .form-cadastro select,
+    .form-cadastro button {
+        font-size: 13px;
         padding: 8px;
+    }
+
+    .form-cadastro label {
+        font-size: 13px;
     }
 }
 </style>
@@ -115,7 +234,9 @@ button:hover {
             <input type="text" name="nome" required>
 
             <label>CPF:</label>
-            <input type="text" name="cpf" required placeholder="000.000.000-00">
+            <input type="text" name="cpf" required 
+                   placeholder="000.000.000-00" 
+                   pattern="\d{3}\.\d{3}\.\d{3}-\d{2}">
 
             <label>Escola:</label>
             <select name="escola" required>
