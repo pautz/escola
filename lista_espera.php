@@ -1,13 +1,15 @@
 <?php
 $conn = new mysqli("localhost", "u839226731_cztuap", "Meu6595869Trator", "u839226731_meutrator");
 
-$nome   = $_GET['nome']   ?? '';
-$cpf    = $_GET['cpf']    ?? '';
-$escola = $_GET['escola'] ?? '';
-$turma  = $_GET['turma']  ?? '';
-$page   = $_GET['page']   ?? 1;
-$limit  = 10; // registros por página
-$offset = ($page - 1) * $limit;
+$nome       = $_GET['nome']        ?? '';
+$cpf        = $_GET['cpf']         ?? '';
+$escola     = $_GET['escola']      ?? '';
+$turma      = $_GET['turma']       ?? '';
+$dataInicio = $_GET['data_inicio'] ?? '';
+$dataFim    = $_GET['data_fim']    ?? '';
+$page       = $_GET['page']        ?? 1;
+$limit      = 10; // registros por página
+$offset     = ($page - 1) * $limit;
 
 // Query base
 $sqlBase = "FROM lista_espera l
@@ -15,10 +17,12 @@ $sqlBase = "FROM lista_espera l
             JOIN turmas t ON l.turma_id = t.id
             WHERE 1=1";
 
-if ($nome)   $sqlBase .= " AND l.nome LIKE '%$nome%'";
-if ($cpf)    $sqlBase .= " AND l.cpf LIKE '%$cpf%'";
-if ($escola) $sqlBase .= " AND e.id = $escola";
-if ($turma)  $sqlBase .= " AND t.id = $turma";
+if ($nome)       $sqlBase .= " AND l.nome LIKE '%$nome%'";
+if ($cpf)        $sqlBase .= " AND l.cpf LIKE '%$cpf%'";
+if ($escola)     $sqlBase .= " AND e.id = $escola";
+if ($turma)      $sqlBase .= " AND t.id = $turma";
+if ($dataInicio) $sqlBase .= " AND l.data_cadastro >= '$dataInicio'";
+if ($dataFim)    $sqlBase .= " AND l.data_cadastro <= '$dataFim'";
 
 // Conta total de registros filtrados
 $countResult = $conn->query("SELECT COUNT(*) AS total $sqlBase");
@@ -26,7 +30,7 @@ $totalRows   = $countResult->fetch_assoc()['total'];
 $totalPages  = ceil($totalRows / $limit);
 
 // Busca registros da página atual
-$sql = "SELECT l.id, l.nome, l.cpf, e.nome AS escola, t.nome AS turma 
+$sql = "SELECT l.id, l.nome, l.cpf, e.nome AS escola, t.nome AS turma, l.data_cadastro
         $sqlBase 
         ORDER BY e.nome, t.nome, l.id ASC 
         LIMIT $limit OFFSET $offset";
@@ -41,7 +45,6 @@ $result = $conn->query($sql);
 </head>
 <body>
     <style>/* Estilo geral */
-/* Estilo geral */
 body {
     font-family: Arial, sans-serif;
     background: #f4f6f9;
@@ -102,6 +105,8 @@ table {
     width: 100%;
     border-collapse: collapse;
     margin-top: 15px;
+    overflow-x: auto;
+    display: block;
 }
 
 table th, table td {
@@ -122,22 +127,7 @@ table tr:nth-child(even) {
     background: #f9f9f9;
 }
 
-/* Mensagens */
-.success {
-    color: green;
-    font-weight: bold;
-    text-align: center;
-    margin-bottom: 15px;
-}
-
-.error {
-    color: red;
-    font-weight: bold;
-    text-align: center;
-    margin-bottom: 15px;
-}
-
-/* Paginação numerada */
+/* Paginação */
 .pagination {
     display: flex;
     justify-content: center;
@@ -212,8 +202,39 @@ table tr:nth-child(even) {
         font-size: 13px;
         padding: 6px 10px;
     }
-}
 
+    /* Tabela em formato "cards" para celular */
+    table, thead, tbody, th, td, tr {
+        display: block;
+    }
+
+    thead {
+        display: none;
+    }
+
+    tr {
+        margin-bottom: 15px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        padding: 10px;
+        background: #fff;
+    }
+
+    td {
+        text-align: left;
+        padding: 8px;
+        border: none;
+        position: relative;
+    }
+
+    td::before {
+        content: attr(data-label);
+        font-weight: bold;
+        display: block;
+        margin-bottom: 4px;
+        color: #007BFF;
+    }
+}
 </style>
 <div class="container">
     <h2>Lista de Espera</h2>
@@ -245,6 +266,10 @@ table tr:nth-child(even) {
             ?>
         </select>
 
+        <!-- Filtro por data -->
+        <input type="date" name="data_inicio" value="<?= htmlspecialchars($dataInicio) ?>">
+        <input type="date" name="data_fim" value="<?= htmlspecialchars($dataFim) ?>">
+
         <button type="submit">Filtrar</button>
     </form>
 
@@ -257,6 +282,7 @@ table tr:nth-child(even) {
                 <th>CPF</th>
                 <th>Escola</th>
                 <th>Turma</th>
+                <th>Data Cadastro</th>
             </tr>
         </thead>
         <tbody>
@@ -276,6 +302,7 @@ table tr:nth-child(even) {
                     <td><?= htmlspecialchars($row['cpf']) ?></td>
                     <td><?= htmlspecialchars($row['escola']) ?></td>
                     <td><?= htmlspecialchars($row['turma']) ?></td>
+                    <td><?= htmlspecialchars($row['data_cadastro']) ?></td>
                 </tr>
             <?php endwhile; ?>
         </tbody>
@@ -284,8 +311,8 @@ table tr:nth-child(even) {
     <!-- Paginação -->
     <div class="pagination">
     <?php if ($page > 1): ?>
-        <a href="?page=1&nome=<?= urlencode($nome) ?>&cpf=<?= urlencode($cpf) ?>&escola=<?= $escola ?>&turma=<?= $turma ?>">« Primeira</a>
-        <a href="?page=<?= $page-1 ?>&nome=<?= urlencode($nome) ?>&cpf=<?= urlencode($cpf) ?>&escola=<?= $escola ?>&turma=<?= $turma ?>">‹ Anterior</a>
+        <a href="?page=1&nome=<?= urlencode($nome) ?>&cpf=<?= urlencode($cpf) ?>&escola=<?= $escola ?>&turma=<?= $turma ?>&data_inicio=<?= $dataInicio ?>&data_fim=<?= $dataFim ?>">« Primeira</a>
+        <a href="?page=<?= $page-1 ?>&nome=<?= urlencode($nome) ?>&cpf=<?= urlencode($cpf) ?>&escola=<?= $escola ?>&turma=<?= $turma ?>&data_inicio=<?= $dataInicio ?>&data_fim=<?= $dataFim ?>">‹ Anterior</a>
     <?php endif; ?>
 
     <?php
@@ -294,14 +321,14 @@ table tr:nth-child(even) {
         if ($i == $page) {
             echo "<span class='current'>$i</span>";
         } else {
-            echo "<a href='?page=$i&nome=" . urlencode($nome) . "&cpf=" . urlencode($cpf) . "&escola=$escola&turma=$turma'>$i</a>";
+            echo "<a href='?page=$i&nome=" . urlencode($nome) . "&cpf=" . urlencode($cpf) . "&escola=$escola&turma=$turma&data_inicio=$dataInicio&data_fim=$dataFim'>$i</a>";
         }
     endfor;
     ?>
 
     <?php if ($page < $totalPages): ?>
-        <a href="?page=<?= $page+1 ?>&nome=<?= urlencode($nome) ?>&cpf=<?= urlencode($cpf) ?>&escola=<?= $escola ?>&turma=<?= $turma ?>">Próxima ›</a>
-        <a href="?page=<?= $totalPages ?>&nome=<?= urlencode($nome) ?>&cpf=<?= urlencode($cpf) ?>&escola=<?= $escola ?>&turma=<?= $turma ?>">Última »</a>
+        <a href="?page=<?= $page+1 ?>&nome=<?= urlencode($nome) ?>&cpf=<?= urlencode($cpf) ?>&escola=<?= $escola ?>&turma=<?= $turma ?>&data_inicio=<?= $dataInicio ?>&data_fim=<?= $dataFim ?>">Próxima ›</a>
+        <a href="?page=<?= $totalPages ?>&nome=<?= urlencode($nome) ?>&cpf=<?= urlencode($cpf) ?>&escola=<?= $escola ?>&turma=<?= $turma ?>&data_inicio=<?= $dataInicio ?>&data_fim=<?= $dataFim ?>">Última »</a>
     <?php endif; ?>
 </div>
 
